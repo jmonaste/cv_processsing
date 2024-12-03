@@ -1,0 +1,41 @@
+# Archivos de configuración sensible
+.env
+
+# Ignorar la carpeta "input" y todo su contenido
+input/
+
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entorno virtual
+venv/
+.env/
+
+# Archivos de dependencias
+*.egg-info/
+*.eggs/
+
+# Resultados de pruebas
+.coverage
+*.cover
+coverage.xml
+htmlcov/
+
+# Archivos de pytest
+.pytest_cache/
+
+# Archivos de profiling
+*.prof
+
+# Archivos de registro
+*.log
+*.out
+*.err
+
+# VSCode
+.vscode/
+
+# Windows
+Thumbs.db
