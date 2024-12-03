@@ -3,6 +3,12 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from utils.pdf_processor import PDFProcessor
 from utils.logger import setup_logger
+from textwrap import dedent
+from models.curriculum import Curriculum
+
+
+
+
 
 # Configurar el logger
 logger = setup_logger(__name__)
@@ -11,7 +17,7 @@ logger = setup_logger(__name__)
 load_dotenv()
 
 # Configuración de la clave API
-pdf_path = os.getenv("PDF_PATH")
+pdf_path = "C:\\Projects\\Personal\\23_CV_Processing\\input\\Pablo Argandoña Medina.pdf"
 api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
@@ -24,42 +30,22 @@ if not pdf_path:
 
 # Crear cliente de OpenAI
 client = OpenAI(api_key=api_key)
+MODEL = "gpt-4o-2024-08-06"
 
 
-def obtener_respuesta_llm(client, pdf_path):
-    """
-    Envía un prompt al modelo de OpenAI para obtener una etiqueta temática basada en palabras clave.
-
-    :param client: Cliente OpenAI configurado.
-    :param pdf_path: Ruta del archivo PDF procesado.
-    :return: Objeto con la respuesta del modelo.
-    """
-    messages = [
-        {
-            "role": "system",
-            "content": "Eres un asistente que etiqueta temas basándose en palabras clave proporcionadas. Proporciona un nombre descriptivo y conciso para cada conjunto de palabras clave."
-        },
-        {
-            "role": "user",
-            "content": "Estas son las palabras clave de un tema: aeroespacial, tecnologia, vuelos, aerodinamica. Proporciona un nombre descriptivo para este tema en español."
-        }
-    ]
-    
-    try:
-        logger.info("Enviando solicitud a OpenAI para etiquetar tema...")
-        chat_completion = client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens=20,
-            temperature=0.3,
-            n=1,
-            stop=None
-        )
-        logger.info("Respuesta recibida de OpenAI.")
-        return chat_completion
-    except Exception as e:
-        logger.error("Error al etiquetar el tema con OpenAI.", exc_info=True)
-        return None
+def get_curriculum(data: str):
+    curriculum_prompt = '''
+    You are a professional CV builder. Given a set of details, your task is to output a structured JSON object representing a resume. Ensure the JSON format matches the schema provided and is well-organized. The description field must be summarized and concise. The proficiency language field must be one of the following: Basic, Intermediate, Advanced, Native.
+    '''
+    completion = client.beta.chat.completions.parse(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": dedent(curriculum_prompt)},
+            {"role": "user", "content": data},
+        ],
+        response_format=Curriculum,
+    )
+    return completion.choices[0].message
 
 
 def print_llm_response(chat_completion):
@@ -111,10 +97,11 @@ def main():
 
     # Obtener respuesta del modelo LLM
     logger.info("Enviando texto extraído al modelo de OpenAI.")
-    chat_completion = obtener_respuesta_llm(client, pdf_path)
+    chat_completion = get_curriculum(text)
+    print(chat_completion.content)
 
     # Imprimir detalles de la respuesta
-    print_llm_response(chat_completion)
+    # print_llm_response(chat_completion)
 
     logger.info("Proceso completado.")
 
