@@ -1,20 +1,19 @@
 from openai import OpenAI
 from dotenv import load_dotenv
+from utils.pdf_processor import PDFProcessor
 import os
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
 # Configuración de la clave API
-imagen_path = os.getenv("IMAGE_PATH")
+pdf_path = os.getenv("PDF_PATH")
 
 client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),  # This is the default and can be omitted
 )
 
-#openai.error.InvalidRequestError: 'chat response' is not one of ['fine-tune', 'assistants', 'batch', 'user_data', 'responses', 'vision', 'evals'] - 'purpose'
-
-def obtener_json_ticket(imagen_path):
+def obtener_respuesta_llm(pdf_path):
     # Definir el prompt y los mensajes para ChatGPT
     messages = [
         {
@@ -43,26 +42,41 @@ def obtener_json_ticket(imagen_path):
         print(f"Error al etiquetar el tema: {e}")
         return "Tema Desconocido"
 
+def print_llm_response(chat_completion):
+    # Accediendo y mostrando parámetros de la respuesta
+    print("Chat Completion Details:")
+    print(f"ID: {chat_completion.id}")
+    print(f"Model: {chat_completion.model}")
+    print(f"Object: {chat_completion.object}")
+    print(f"Created at (timestamp): {chat_completion.created}")
+    print(f"Choices:")
 
-chat_completion = obtener_json_ticket(imagen_path)
+    for idx, choice in enumerate(chat_completion.choices):
+        print(f"  Choice {idx + 1}:")
+        print(f"    Index: {choice.index}")
+        print(f"    Finish Reason: {choice.finish_reason}")
+        print(f"    Message Content: {choice.message.content}")
+        print(f"    Role: {choice.message.role}")
 
-# Accediendo y mostrando parámetros de la respuesta
-print("Chat Completion Details:")
-print(f"ID: {chat_completion.id}")
-print(f"Model: {chat_completion.model}")
-print(f"Object: {chat_completion.object}")
-print(f"Created at (timestamp): {chat_completion.created}")
-print(f"Choices:")
+    print("Usage Details:")
+    print(f"  Prompt Tokens: {chat_completion.usage.prompt_tokens}")
+    print(f"  Completion Tokens: {chat_completion.usage.completion_tokens}")
+    print(f"  Total Tokens: {chat_completion.usage.total_tokens}")
 
-for idx, choice in enumerate(chat_completion.choices):
-    print(f"  Choice {idx + 1}:")
-    print(f"    Index: {choice.index}")
-    print(f"    Finish Reason: {choice.finish_reason}")
-    print(f"    Message Content: {choice.message.content}")
-    print(f"    Role: {choice.message.role}")
 
-print("Usage Details:")
-print(f"  Prompt Tokens: {chat_completion.usage.prompt_tokens}")
-print(f"  Completion Tokens: {chat_completion.usage.completion_tokens}")
-print(f"  Total Tokens: {chat_completion.usage.total_tokens}")
+
+#chat_completion = obtener_respuesta_llm(pdf_path)
+
+# Crear una instancia de PDFProcessor
+processor = PDFProcessor(pdf_path)
+
+# Extraer texto
+text = processor.extract_text()
+
+# Mostrar el texto extraído o guardarlo
+if text:
+    print("Texto extraído del PDF:")
+    print(text)
+else:
+    print("No se pudo extraer texto del PDF.")
 
